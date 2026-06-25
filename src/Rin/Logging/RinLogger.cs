@@ -17,7 +17,7 @@ namespace Rin.Logging
             _accessor = accessor;
         }
 
-        public IDisposable BeginScope<TState>(TState state)
+        public IDisposable BeginScope<TState>(TState state) where TState : notnull
         {
             return NullDisposable.Instance;
         }

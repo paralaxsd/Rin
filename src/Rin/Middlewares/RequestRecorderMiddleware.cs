@@ -130,8 +130,7 @@ namespace Rin.Middlewares
             await _eventBus.PostAsync(new RequestEventMessage(EventSourceName, record, RequestEvent.BeginRequest));
 
             // Set a current Rin request ID to response header.
-            context.Response.Headers.Add("X-Rin-Request-Id", record.Id);
-
+            context.Response.Headers["X-Rin-Request-Id"] = record.Id;
             if (options.RequestRecorder.EnableBodyCapturing)
             {
                 context.EnableResponseDataCapturing();

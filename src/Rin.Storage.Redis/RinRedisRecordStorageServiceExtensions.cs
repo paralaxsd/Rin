@@ -21,7 +21,7 @@ namespace Microsoft.Extensions.DependencyInjection
         public static IRinBuilder UseRedisStorage(this IRinBuilder builder, Action<RedisRecordStorageOptions>? configure = null)
         {
             builder.Services.AddOptions<RedisRecordStorageOptions>();
-            builder.Services.Configure<RedisRecordStorageOptions>(configure);
+            builder.Services.Configure<RedisRecordStorageOptions>(opt => configure?.Invoke(opt));
 
             builder.Services.Replace(new ServiceDescriptor(typeof(IRecordStorage), typeof(RedisRecordStorage), ServiceLifetime.Singleton));
 
