@@ -1,43 +1,52 @@
-# <img src="docs/images/logo.svg" alt="" width="32" /> Rin
+# <img src="docs/images/logo.svg" alt="" width="32" /> paralax.Rin — .NET 10 fork of Rin
+
+[![Build-Release](https://github.com/paralaxsd/Rin/workflows/Build-Release/badge.svg)](https://github.com/paralaxsd/Rin/actions?query=workflow%3ABuild-Release)
+[![Build-Development](https://github.com/paralaxsd/Rin/workflows/Build-Development/badge.svg)](https://github.com/paralaxsd/Rin/actions?query=workflow%3ABuild-Development)
+[![NuGet version](https://badge.fury.io/nu/paralax.Rin.svg)](https://badge.fury.io/nu/paralax.Rin)
+
+> **This is a personal fork of [mayuki/Rin](https://github.com/mayuki/Rin) (v2.6.0), ported to .NET 10.**
+>
+> I made this because the original project has been inactive since 2021 and I needed it to work with .NET 10.
+> **I do not maintain this project** beyond my own needs — use at your own risk.
+> That said, feel free to copy, fork, or build on this work. MIT license, go nuts.
+>
+> Notable changes vs. original:
+> - All packages target **net10.0** only
+> - NuGet dependencies updated to current versions
+> - Fixed `CapturePipeWriter` for .NET 10 (`CanGetUnflushedBytes`, `UnflushedBytes`) — required by `System.Text.Json`'s new PipeWriter serialization path
+> - `Rin.Extensions.MagicOnion` is included but **not updated** — the MagicOnion API changes were breaking and I don't use it
+> - Published as `paralax.*` packages to avoid collision with the original
+
+---
+
 **R**equest/response **In**spector middleware for ASP.NET Core. like Glimpse.
 
-[![Build-Release](https://github.com/mayuki/Rin/workflows/Build-Release/badge.svg)](https://github.com/mayuki/Rin/actions?query=workflow%3ABuild-Release)
-[![Build-Development](https://github.com/mayuki/Rin/workflows/Build-Development/badge.svg)](https://github.com/mayuki/Rin/actions?query=workflow%3ABuild-Development)
-[![NuGet version](https://badge.fury.io/nu/Rin.svg)](https://badge.fury.io/nu/Rin)
-
-Rin captures HTTP requests to ASP.NET Core app and provides viewer for captured data. It's useful tool to debug your Web application (e.g. Web sites, API apps).
+Rin captures HTTP requests to your ASP.NET Core app and provides a web-based viewer for captured data. Useful for debugging Web applications (API apps, web sites, etc.).
 
 ![](docs/images/Demo-01.gif)
 
 # ✅ Features
 ## Capture requests and responses
-Rin captures HTTP traffics between the ASP.NET Core app and any clients.
-
 - Headers + Body
 - Traces (`Microsoft.Extensions.Logging.ILogger`, log4net, ...)
-- Unhandled Exception
+- Unhandled Exceptions
+- Entity Framework Core queries (via `paralax.Rin.Extensions.EntityFrameworkCore`)
 
-## Inspect from Web browser in realtime
+## Inspect from a browser in realtime
 
 ### View events timeline
-Rin inspector displays events that occurred while processing a request.
-
 ![](docs/images/Screenshot-02.png)
 
-### Preview a request/response body
-Rin inspector can display request and response body with a preview. (e.g. JSON, Image, HTML, JavaScript ...)
+### Preview request/response body
+Rin inspector can display request and response body with a preview (JSON, Image, HTML, JavaScript ...).
 
 ![](docs/images/Screenshot-03.png)
 
 ### View related trace logs
-Rin captures a request and response. Also, it captures logs while processing a request.
-
 - Built-in `Microsoft.Extensions.Logging.ILogger` integration
 - log4net Appender
 
 ### Save and export request/response
-You can replay a request easily using cURL and LINQPad.
-
 - Save request/response body
 - Copy request as cURL and C#
 
@@ -48,112 +57,63 @@ You can replay a request easily using cURL and LINQPad.
 ![](docs/images/Screenshot-04.png)
 
 # 📝 Requirements
-- .NET Core 3.1+
-- ASP.NET Core 3.1+
-- Modern browser (e.g. Microsoft Edge, Google Chrome, Firefox, Safari...)
+- .NET 10+
+- ASP.NET Core 10+
+- Modern browser (Edge, Chrome, Firefox, Safari)
     - WebSocket connectivity
 
 # ⚡ QuickStart
 
 ## Install NuGet Package
-### Using Visual Studio
-`Dependencies` -> `Manage NuGet Packages...` -> Search and install `Rin` and `Rin.Mvc` (if your project is built with ASP.NET Core MVC) package.
-
-### Using dotnet command
 ```
-dotnet add package Rin
-dotnet add package Rin.Mvc
+dotnet add package paralax.Rin
+dotnet add package paralax.Rin.Mvc  # if using ASP.NET Core MVC
 ```
 
-### Using Package Manager
-```
-Install-Package Rin
-Install-Package Rin.Mvc
-```
+## Setup
 
-## Setup and configure Rin
-
-### Program.cs
+### Program.cs (minimal hosting)
 ```csharp
-public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
-    WebHost.CreateDefaultBuilder(args)
-        .ConfigureLogging(configure =>
-        {
-            // Add: Enable Rin Logger
-            configure.AddRinLogger();
-        })
-        .UseStartup<Startup>();
-```
+var builder = WebApplication.CreateBuilder(args);
 
-### Startup.cs
+builder.Logging.AddRinLogger();
+builder.Services.AddRin();
+builder.Services.AddControllersWithViews()
+    .AddRinMvcSupport(); // optional, MVC only
 
-```csharp
-public class Startup
+var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
 {
-    ...
-    public void ConfigureServices(IServiceCollection services)
-    {
-        ...
-        services.AddControllersWithViews()
-            // Add(option): Enable ASP.NET Core MVC support if the project built with ASP.NET Core MVC
-            .AddRinMvcSupport();        
-
-        // Add: Register Rin services
-        services.AddRin();
-    }
-    ...
-    public void Configure(IApplicationBuilder app, IHostingEnvironment env)
-    {
-        if (env.IsDevelopment())
-        {
-            // Add: Enable request/response recording and serve a inspector frontend.
-            // Important: `UseRin` (Middlewares) must be top of the HTTP pipeline.
-            app.UseRin();
-
-            // Add(option): Enable ASP.NET Core MVC support if the project built with ASP.NET Core MVC
-            app.UseRinMvcSupport();
-
-            app.UseDeveloperExceptionPage();
-
-            // Add: Enable Exception recorder. this handler must be after `UseDeveloperExceptionPage`.
-            app.UseRinDiagnosticsHandler();
-        }
-        ...
-    }
+    app.UseRin();           // must be at the top of the pipeline
+    app.UseRinMvcSupport(); // optional, MVC only
+    app.UseDeveloperExceptionPage();
+    app.UseRinDiagnosticsHandler(); // must be after UseDeveloperExceptionPage
 }
 ```
 
-### _Layout.cshtml (for ASP.NET Core MVC)
+### _Layout.cshtml (ASP.NET Core MVC only)
 ```cshtml
 @inject Rin.Mvc.View.RinHelperService RinHelper
 ...
     <environment include="Development">
-        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
-        <link rel="stylesheet" href="~/css/site.css" />
-        @* Add: Enable In-View Inspector for ASP.NET Core MVC *@
+        @* Add: Enable In-View Inspector *@
         @RinHelper.RenderInViewInspector()
     </environment>
-...
 ```
 
-## Start the application and open Inspector on the web
+Open `http://[Host:Port]/rin/` to access the Rin Inspector.
 
-Launch the app, then open `http://[Host:Port]/rin/` in the browser, you can see Rin Inspector now.
+# 🔨 Building locally
 
-# 🔨 Develop and build Rin Inspector (client side)
-Rin Inspector (client side) codes is separated from Rin core C# project. If you want to develop Rin (C#) or launch a sample project, you need to build and deploy the artifacts.
+Frontend assets are not checked in and must be built before `dotnet build`. Run from the repo root:
 
-## [Rin.Frontend, Rin.Mvc.Frontend] Setup and start the development server
-- `yarn`
-- `yarn start`
+```powershell
+.\build-frontend.ps1
+dotnet build
+```
 
-## [Rin.Frontend] Build Rin/Resources.zip
-- `yarn build`
-- `yarn pack`
-
-## [Rin.Mvc.Frontend] Build Rin.Mvc/EmbeddedResources
-- `yarn build`
-- `copy .\dist\static\main.js* ..\Rin.Mvc\EmbeddedResources\`
+The script sets `NODE_OPTIONS=--openssl-legacy-provider` which is required because the frontend uses Webpack 4, incompatible with Node.js 17+ default OpenSSL settings.
 
 # License
-[MIT License](LICENSE)
+[MIT License](LICENSE) — original work by Mayuki Sawatari, .NET 10 port by paralax.

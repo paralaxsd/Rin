@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <VersionPrefix>2.7.2</VersionPrefix>
+    <VersionPrefix>2.7.3</VersionPrefix>
     <VersionSuffix>$(VersionSuffix)</VersionSuffix>
     <LangVersion>latest</LangVersion>
 
@@ -11,10 +11,16 @@
     <Description>Request/response Inspector middleware for ASP.NET Core</Description>
     <Authors>paralax</Authors>
     <Copyright>Copyright 2019-present Mayuki Sawatari; 2026-present paralax</Copyright>
-    <PackageProjectUrl>https://github.com/paralax/Rin</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/paralax/Rin</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/paralaxsd/Rin</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/paralaxsd/Rin</RepositoryUrl>
     <PackageIcon>logo.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>Rin ASP.NET Request Inspector</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
 </Project>
