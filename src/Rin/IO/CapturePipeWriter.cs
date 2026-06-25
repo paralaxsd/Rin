@@ -30,6 +30,8 @@ namespace Rin.IO
             }
         }
 
+        public override bool CanGetUnflushedBytes => true;
+
         public override void Advance(int bytes)
         {
             _capturedDataStream.Write(_pipeWriter.GetSpan(bytes).Slice(0, bytes));
