@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.IO.Pipelines;
 using System.Threading;
@@ -17,7 +17,18 @@ namespace Rin.IO
             _capturedDataStream = capturedDataStream;
         }
 
-        public override long UnflushedBytes => _pipeWriter.UnflushedBytes;
+        // Delegate to inner writer; fall back to 0 if inner doesn't implement it.
+        // System.Text.Json in .NET 10 uses this as a flush threshold — returning 0 means
+        // "flush eagerly", which is safe. Without this override the base class throws and
+        // STJ re-names the exception to this type regardless of who actually threw.
+        public override long UnflushedBytes
+        {
+            get
+            {
+                try { return _pipeWriter.UnflushedBytes; }
+                catch (NotImplementedException) { return 0; }
+            }
+        }
 
         public override void Advance(int bytes)
         {
