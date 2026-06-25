@@ -1,5 +1,11 @@
+using System;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Logging;
 using Rin.Channel;
 using Rin.Core;
@@ -7,15 +13,7 @@ using Rin.Core.Event;
 using Rin.Core.Record;
 using Rin.Extensions;
 using Rin.Features;
-using Rin.Hubs;
-using Rin.Hubs.HubClients;
-using Rin.Hubs.Payloads;
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http.Features;
-using Microsoft.AspNetCore.Connections;
+// ReSharper disable ExplicitCallerInfoArgument
 
 namespace Rin.Middlewares
 {
@@ -112,7 +110,7 @@ namespace Rin.Middlewares
             {
                 Id = Guid.NewGuid().ToString(),
                 IsHttps = request.IsHttps,
-                Host = request.Host.Value,
+                Host = request.Host.Value ?? "",
                 QueryString = request.QueryString.Value,
                 Path = request.Path,
                 Method = request.Method,
