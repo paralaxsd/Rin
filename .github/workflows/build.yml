@@ -11,28 +11,29 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     env:
       DOTNET_NOLOGO: true
-    
-    steps:
-    - uses: actions/checkout@v1
 
-    - uses: actions/setup-dotnet@v1
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-node@v4
       with:
-        dotnet-version: '6.0.x'
+        node-version: '20'
+
+    - uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.x'
 
     - name: "Set VersionSuffix"
       run: |
-        echo "VERSION_SUFFIX=preview.`date '+%Y%m%d-%H%M%S'`+${GITHUB_SHA:0:6}" >> $GITHUB_ENV
-
-    - name: "Get git tag"
-      if: "contains(github.ref, 'refs/tags')"
-      run: echo "GIT_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+        echo "VERSION_SUFFIX=preview.$(date '+%Y%m%d-%H%M%S')+${GITHUB_SHA:0:6}" >> $GITHUB_ENV
 
     - name: "Rin.Frontend: build & pack"
       working-directory: src/Rin.Frontend
+      env:
+        NODE_OPTIONS: --openssl-legacy-provider
       run: |
         yarn
         yarn run build
@@ -40,6 +41,8 @@ jobs:
 
     - name: "Rin.Mvc.Frontend: build"
       working-directory: src/Rin.Mvc.Frontend
+      env:
+        NODE_OPTIONS: --openssl-legacy-provider
       run: |
         yarn
         yarn run build
@@ -55,7 +58,7 @@ jobs:
         dotnet build -c Release
         dotnet pack -c Release -o $GITHUB_WORKSPACE/artifacts --version-suffix "$VERSION_SUFFIX" -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
 
-    - uses: actions/upload-artifact@master
+    - uses: actions/upload-artifact@v4
       with:
         name: Packages
         path: artifacts

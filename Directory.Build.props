@@ -6,11 +6,13 @@
     <LangVersion>latest</LangVersion>
 
     <!-- NuGet Package Information -->
+    <!-- Prefix to avoid collision with the original mayuki/Rin packages on nuget.org -->
+    <PackageId>paralax.$(MSBuildProjectName)</PackageId>
     <Description>Request/response Inspector middleware for ASP.NET Core</Description>
-    <Authors>Mayuki Sawatari</Authors>
-    <Copyright>Copyright 2019-present Mayuki Sawatari</Copyright>
-    <PackageProjectUrl>https://github.com/mayuki/Rin</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/mayuki/Rin</RepositoryUrl>
+    <Authors>paralax</Authors>
+    <Copyright>Copyright 2019-present Mayuki Sawatari; 2026-present paralax</Copyright>
+    <PackageProjectUrl>https://github.com/paralax/Rin</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/paralax/Rin</RepositoryUrl>
     <PackageIcon>logo.png</PackageIcon>
     <PackageTags>Rin ASP.NET Request Inspector</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

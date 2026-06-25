@@ -4,33 +4,37 @@ on:
   push:
     tags:
       - v*
+  workflow_dispatch:
 
 jobs:
   release:
-    if: "contains(github.ref, 'refs/tags')"
-
     runs-on: ubuntu-latest
     env:
       DOTNET_NOLOGO: true
-    
-    steps:
-    - uses: actions/checkout@v1
+    permissions:
+      contents: read
+      id-token: write
 
-    - uses: actions/setup-dotnet@v1
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-node@v4
       with:
-        dotnet-version: '6.0.x'
+        node-version: '20'
+
+    - uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.x'
 
     - name: "Set VersionSuffix for Preview"
-      if: "contains(github.ref, 'refs/tags') && contains(github.ref, 'preview')"
+      if: "contains(github.ref, 'preview')"
       run: |
-        echo "VERSION_SUFFIX=preview.`date '+%Y%m%d-%H%M%S'`+${GITHUB_SHA:0:6}" >> $GITHUB_ENV
-
-    - name: "Get git tag"
-      if: "contains(github.ref, 'refs/tags')"
-      run: echo "GIT_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+        echo "VERSION_SUFFIX=preview.$(date '+%Y%m%d-%H%M%S')+${GITHUB_SHA:0:6}" >> $GITHUB_ENV
 
     - name: "Rin.Frontend: build & pack"
       working-directory: src/Rin.Frontend
+      env:
+        NODE_OPTIONS: --openssl-legacy-provider
       run: |
         yarn
         yarn run build
@@ -38,6 +42,8 @@ jobs:
 
     - name: "Rin.Mvc.Frontend: build"
       working-directory: src/Rin.Mvc.Frontend
+      env:
+        NODE_OPTIONS: --openssl-legacy-provider
       run: |
         yarn
         yarn run build
@@ -53,11 +59,17 @@ jobs:
         dotnet build -c Release
         dotnet pack -c Release -o $GITHUB_WORKSPACE/artifacts --version-suffix "$VERSION_SUFFIX" -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
 
-    - uses: actions/upload-artifact@master
+    - uses: actions/upload-artifact@v4
       with:
         name: Packages
         path: artifacts
 
+    - name: "Login to NuGet.org (OIDC)"
+      id: login
+      uses: NuGet/login@v1
+      with:
+        user: mtopf
+
     - name: "Push to NuGet.org"
       run: |
-        dotnet nuget push "$GITHUB_WORKSPACE/artifacts/*.nupkg" --skip-duplicate -k ${{ secrets.NUGET_KEY }} -s https://api.nuget.org/v3/index.json
+        dotnet nuget push "$GITHUB_WORKSPACE/artifacts/*.nupkg" --skip-duplicate -k ${{ steps.login.outputs.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
